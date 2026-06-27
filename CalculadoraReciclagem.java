@@ -1,52 +1,148 @@
-public class CalculadoraReciclagem { // calcula a reciclagem das tampinhas
+/**
+ * CalculadoraReciclagem — Motor de cálculo para reciclagem de tampinhas PET.
+ *
+ * <p>Responsável por converter quantidades de tampinhas plásticas em projeções
+ * anuais de massa (kg) e retorno financeiro (R$), com base em fatores de
+ * conversão padronizados do mercado de reciclagem.</p>
+ *
+ * <h3>Fatores de Conversão:</h3>
+ * <ul>
+ *   <li>Tampinhas de garrafas 1L e 2L: 500 unidades = 1 kg</li>
+ *   <li>Tampinhas de garrafas de água mineral: 1.000 unidades = 1 kg</li>
+ *   <li>Preço de mercado: R$ 0,98 por kg reciclado</li>
+ * </ul>
+ *
+ * @author Eduardo Vinícius, Gabriel César, João Victor, Cauã Vital, Francisco Marques, Alex Ricardo
+ * @version 1.0
+ */
+public class CalculadoraReciclagem {
 
-    private static final double TAMPINHAS_GRANDES_POR_KG = 500.0;   // 500 tampinhas de 1L e 2L = 1 kg
-    private static final double TAMPINHAS_AGUA_POR_KG = 1000.0;     // 1000 tampinhas de água = 1 kg
-    private static final double PRECO_KG = 0.98;                    // preço por kg reciclado
+    // ========================== CONSTANTES DE CONVERSÃO ==========================
 
-    public enum PeriodoColeta { // tipo de período que o usuário escolhe
-        DIARIO(365.0),   // todo dia multiplica por 365
-        SEMANAL(52.0),   // toda semana, 52 vezes por ano
-        MENSAL(12.0),    // todo mês, 12 vezes
-        ANUAL(1.0);      // uma vez por ano
+    /** Quantidade de tampinhas de garrafas grandes (1L/2L) necessárias para compor 1 kg. */
+    private static final double TAMPINHAS_GRANDES_POR_KG = 500.0;
 
-        private final double multiplicadorAnual; // fator de multiplicação pro ano
+    /** Quantidade de tampinhas de garrafas de água mineral necessárias para compor 1 kg. */
+    private static final double TAMPINHAS_AGUA_POR_KG = 1000.0;
 
-        PeriodoColeta(double multiplicadorAnual) {
+    /** Valor de mercado por quilograma de tampinhas PET recicladas (em R$). */
+    private static final double PRECO_KG = 0.98;
+
+    // ========================== ENUM DE PERÍODO ==========================
+
+    /**
+     * Representa os períodos de coleta suportados pelo sistema.
+     * Cada período possui um multiplicador que converte a quantidade informada
+     * em uma projeção anual equivalente.
+     */
+    public enum PeriodoColeta {
+        /** Coleta diária — multiplicador de 365 (dias/ano). */
+        DIARIO(365.0, "Diário"),
+
+        /** Coleta semanal — multiplicador de 52 (semanas/ano). */
+        SEMANAL(52.0, "Semanal"),
+
+        /** Coleta mensal — multiplicador de 12 (meses/ano). */
+        MENSAL(12.0, "Mensal"),
+
+        /** Coleta anual — multiplicador de 1 (já representa o ano). */
+        ANUAL(1.0, "Anual");
+
+        private final double multiplicadorAnual;
+        private final String descricao;
+
+        PeriodoColeta(double multiplicadorAnual, String descricao) {
             this.multiplicadorAnual = multiplicadorAnual;
+            this.descricao = descricao;
         }
 
+        /**
+         * Retorna o fator de multiplicação para projeção anual.
+         * @return multiplicador anual correspondente ao período
+         */
         public double getMultiplicador() {
             return multiplicadorAnual;
         }
+
+        /**
+         * Exibe o nome amigável do período no seletor da interface.
+         * @return descrição legível do período (ex: "Diário", "Semanal")
+         */
+        @Override
+        public String toString() {
+            return descricao;
+        }
     }
 
+    // ========================== CÁLCULO PRINCIPAL ==========================
+
+    /**
+     * Calcula a projeção anual de massa reciclável e valor financeiro estimado.
+     *
+     * @param tampinhas2L   quantidade de tampinhas de garrafas PET de 2L
+     * @param tampinhas1L   quantidade de tampinhas de garrafas PET de 1L
+     * @param tampinhasAgua quantidade de tampinhas de garrafas de água mineral
+     * @param periodo       período de coleta selecionado pelo usuário
+     * @return objeto {@link Resultado} com peso anual (kg) e valor anual (R$)
+     * @throws IllegalArgumentException se qualquer quantidade for negativa
+     */
     public Resultado calcularAnual(
-            int tampinhas2L,        // tampinhas de garrafa 2L
-            int tampinhas1L,        // tampinhas de garrafa 1L
-            int tampinhasAgua,      // tampinhas de água mineral
-            PeriodoColeta periodo   // qual período foi escolhido
+            int tampinhas2L,
+            int tampinhas1L,
+            int tampinhasAgua,
+            PeriodoColeta periodo
     ) {
-        double pesoGrandes = (tampinhas2L + tampinhas1L) / TAMPINHAS_GRANDES_POR_KG; // peso em kg das grandes
-        double pesoAgua = tampinhasAgua / TAMPINHAS_AGUA_POR_KG; // peso em kg da água
-        double pesoTotal = pesoGrandes + pesoAgua; // peso total do período
-        double pesoAnual = pesoTotal * periodo.getMultiplicador(); // converte pro ano
-        double valorAnual = pesoAnual * PRECO_KG; // valor em reais
+        if (tampinhas2L < 0 || tampinhas1L < 0 || tampinhasAgua < 0) {
+            throw new IllegalArgumentException("As quantidades não podem ser negativas.");
+        }
+
+        double pesoGrandes = (tampinhas2L + tampinhas1L) / TAMPINHAS_GRANDES_POR_KG;
+        double pesoAgua    = tampinhasAgua / TAMPINHAS_AGUA_POR_KG;
+        double pesoTotal   = pesoGrandes + pesoAgua;
+        double pesoAnual   = pesoTotal * periodo.getMultiplicador();
+        double valorAnual  = pesoAnual * PRECO_KG;
 
         return new Resultado(pesoAnual, valorAnual);
     }
 
-    // ----- CLASSE QUE GUARDA O RESULTADO -----
-    public static class Resultado {
-        private final double pesoEmKgAno;        // Peso total em kg no ano
-        private final double valorEmReaisAno;    // Valor total em reais no ano
+    // ========================== CLASSE DE RESULTADO ==========================
 
-        public Resultado(double pesoEmKgAno, double valorEmReaisAno) { // Guarda os valores
+    /**
+     * Encapsula o resultado de uma projeção anual de reciclagem.
+     * Imutável por design — valores definidos apenas no construtor.
+     */
+    public static class Resultado {
+
+        private final double pesoEmKgAno;
+        private final double valorEmReaisAno;
+
+        /**
+         * Cria um novo resultado de projeção anual.
+         * @param pesoEmKgAno    massa total em quilogramas projetada para o ano
+         * @param valorEmReaisAno valor financeiro em reais projetado para o ano
+         */
+        public Resultado(double pesoEmKgAno, double valorEmReaisAno) {
             this.pesoEmKgAno = pesoEmKgAno;
             this.valorEmReaisAno = valorEmReaisAno;
         }
 
-        public double getPesoKgAnual() { return pesoEmKgAno; }         // Retorna o peso
-        public double getValorAnual() { return valorEmReaisAno; } // Retorna o valor
+        /** @return massa anual projetada em quilogramas */
+        public double getPesoKgAnual() {
+            return pesoEmKgAno;
+        }
+
+        /** @return valor financeiro anual projetado em reais */
+        public double getValorAnual() {
+            return valorEmReaisAno;
+        }
+
+        /**
+         * Representação textual do resultado para debug e logging.
+         * @return string formatada com peso e valor anuais
+         */
+        @Override
+        public String toString() {
+            return String.format("Resultado { peso=%.3f kg/ano, valor=R$ %.2f/ano }", pesoEmKgAno, valorEmReaisAno);
+        }
     }
 }
