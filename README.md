@@ -224,5 +224,5 @@ java ReciclagemApp
 ---
 
 <p align="center">
-  <em>Desenvolvido em 2026 para fins educacionais e ecológicos ♻️</em>
+  <em>Desenvolvido em 2025 para fins educacionais e ecológicos ♻️</em>
 </p>
